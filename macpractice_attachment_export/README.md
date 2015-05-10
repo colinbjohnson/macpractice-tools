@@ -21,7 +21,7 @@ An example use is below:
 Currently, MacPractice Attachment Export tool has been tested with only:
 
 1. Image Attachments
-2. Notes Attachments
+2. Order Attachments
 
 # Disclaimer:
 Use this tool at your own risk.
