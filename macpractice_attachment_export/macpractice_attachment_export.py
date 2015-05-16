@@ -3,6 +3,7 @@
 import argparse
 import logging
 import os
+import string
 import shutil
 
 import mysql.connector
@@ -28,7 +29,7 @@ parser.add_argument('--username', help='provide a MacPractice DB username.')
 parser.add_argument('--password', help='provide a MacPractice DB password.')
 parser.add_argument('--database', default='macpractice',
                     help='the name of the MacPractice database.')
-parser.add_argument('--dry-run', default='macpractice', dest='dry_run',
+parser.add_argument('--dry-run', default=False, dest='dry_run',
                     help='set dry-run True if you wish to to test processing.')
 parser.add_argument('--source-dir', default='/Temp/attachments', dest='source_dir',
                     help='the directory where attachments exist.')
@@ -68,15 +69,23 @@ for root, directories, file_names in files:
             attachment.file_path = file_path
             attachment.attachment_type = attachment.get_attachment_type(mysql_connection)
             attachment.patient_id = attachment.get_patient_id(mysql_connection, attachment.attachment_type)
+            attachment.image_attachment_type_id = attachment.get_image_attachment_type_id(mysql_connection)
+            attachment.image_attachment_type_name = attachment.get_image_attachment_type_name(mysql_connection)
             attachments[attachment_id] = attachment
 
 for attachment_id in attachments:
     attachment = attachments[attachment_id]
+    attachment_type = None
     last = None
     first = None
     if attachment.patient_id is not None and patients[attachment.patient_id] is not None:
         last = patients[attachment.patient_id].last
         first = patients[attachment.patient_id].first
+
     logging.info('Preparing to Export Attachment: {!s}'.format(attachment.attached_file_id))
-    file_name = "{!s}-{!s}-{!s}".format(last, first, attachment.file_name)
+    if attachment.image_attachment_type_name is not None:
+        # slashes ('/') create a problem when copying attachments. Under OS X you can replace with a :
+        # I've opted to remove
+        attachment_type = string.replace(attachment.image_attachment_type_name, '/', '')
+    file_name = "{!s}-{!s}-{!s}-{!s}".format(attachment_type, last, first, attachment.file_name)
     export_result = export_attachment(attachments[attachment_id], args.target_dir, file_name)

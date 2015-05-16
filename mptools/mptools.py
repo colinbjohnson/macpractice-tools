@@ -14,11 +14,28 @@ class Attachment:
         self.patient_id = None
         self.attachment_type = None
         self.file_path = None
+        self.image_attachment_type_id = None
+        self.image_attachment_type_name = None
+
+    def get_image_attachment_type(self, mysql_connection):
+        '''
+        given MySQL Connection Object and an Attachment of "Image" type, return the type of attachment
+        '''
+        image_attachment_type_name = None
+        query = ('SELECT * FROM attachment_type WHERE attachment_type_id=\'{!s}\';'
+                 .format(self.image_attachment_type_id))
+        cursor = mysql_connection.cursor(dictionary=True)
+        cursor.execute(query)
+        image_attachment_type_row = cursor.fetchall()
+        if image_attachment_type_row['image_attachment_type_id'] is not None:
+            image_attachment_type_name = image_attachment_type_row['image_attachment_type_id']
+        return image_attachment_type_name
 
     def get_attachment_type(self, mysql_connection):
         # TODO: clean up attachment_type_query
         '''
-        given MySQL Connection Object and an Attachment ID, return the type of attachment
+        given MySQL Connection Object and an Attachment Object, return the type of attachment
+        where attachment type is either Image, Order or None
         '''
         attachment_type = None
         attachment_type_query = ('SELECT attached_file.attached_file_id AS attached_file_id, '
@@ -60,6 +77,28 @@ class Attachment:
         patient_id = patient_id_row['patient_id']
         return patient_id
 
+    def get_image_attachment_type_id(self, mysql_connection):
+        image_attachment_type_id = None
+        if self.attachment_type == 'image':
+            query = 'SELECT attachment_type_id FROM image_attachments WHERE ' \
+                    'attached_file_id=\'{!s}\';'.format(self.attached_file_id)
+            image_attachment_row = get_row_result(mysql_connection, query)
+            image_attachment_type_id = image_attachment_row['attachment_type_id']
+        else:
+            logging.warn('image_attachment_type_id Not Found for: {!s}'.format(self.attached_file_id))
+        return image_attachment_type_id
+
+    def get_image_attachment_type_name(self, mysql_connection):
+        image_attachment_type_name = None
+        if self.image_attachment_type_id is not None:
+            query = 'SELECT attachment_type FROM attachment_type WHERE ' \
+                    'attachment_type_id=\'{!s}\';'.format(self.image_attachment_type_id)
+            attachment_type_row = get_row_result(mysql_connection, query)
+            image_attachment_type_name = attachment_type_row['attachment_type']
+        else:
+            logging.warn('image_attachment_type_name Not Found for: {!s}'.format(self.image_attachment_type_id))
+        return image_attachment_type_name
+
     @classmethod
     def get_attachment_by_id(cls, mysql_connection, attachment_id):
         attachment = None
@@ -84,6 +123,8 @@ class Attachment:
             attachment = Attachment(attached_file_id)
             attachment.file_name = attachment_row['file_name']
             attachment.hash = attachment_row['hash']
+            attachment.attachment_type_id = attachment_row['hash']
+
         else:
             logging.warn('Attachment with Hash {!s} not found.'.format(attachment_hash))
         return attachment
@@ -100,6 +141,7 @@ class Attachment:
             attachments[attached_file_id] = Attachment(attached_file_id)
             attachments[attached_file_id].file_name = attachment_row['file_name']
             attachments[attached_file_id].hash = attachment_row['hash']
+            logging.info('Got Attachment with Attached File ID: {!s}'.format(attached_file_id))
         return attachments
 
 
@@ -122,6 +164,7 @@ class Patient:
             patient_id = patient_row['patient_id']
             patients[patient_id] = Patient(patient_id)
             patients[patient_id].person_id = patient_row['person_id']
+            logging.info('Got Patient with Patient ID: {!s}'.format(patient_id))
         return patients
 
 
@@ -141,6 +184,7 @@ class Person:
             person = Person(person_id)
             person.last = person_row['last']
             person.first = person_row['first']
+            logging.info('Got Person with Person ID: {!s}'.format(person_id))
         return person
 
 
