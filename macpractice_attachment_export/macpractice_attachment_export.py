@@ -13,12 +13,17 @@ sys.path.append("../mptools")
 from mptools import Attachment, Patient, Person
 
 
-def export_attachment(attachment, target_dir, file_name):
+def export_attachment(attachment, target_dir, file_name, folder_path=None):
     '''
     given an attachment object, a target_dir and a file_name,
     copy the given attachment into that specified target_dir
     '''
-    target_file = os.path.join(target_dir, file_name)
+    if not os.path.exists("{!s}/{!s}".format(target_dir, folder_path)):
+        logging.info('Directory {!s} Will Be Created'.format(folder_path))
+        target_path = "{!s}/{!s}".format(target_dir, folder_path)
+        os.makedirs(target_path)
+    target_file = os.path.join(target_dir, folder_path, file_name)
+    logging.info('Will Copy File {!s} to {!s}'.format(attachment.file_path, target_file))
     shutil.copy(attachment.file_path, target_file)
     return True
 
@@ -87,5 +92,6 @@ for attachment_id in attachments:
         # slashes ('/') create a problem when copying attachments. Under OS X you can replace with a :
         # I've opted to remove
         attachment_type = string.replace(attachment.image_attachment_type_name, '/', '')
-    file_name = "{!s}-{!s}-{!s}-{!s}".format(attachment_type, last, first, attachment.file_name)
-    export_result = export_attachment(attachments[attachment_id], args.target_dir, file_name)
+    folder_path = "{!s}-{!s}-{!s}/{!s}".format(last, first, attachment.patient_id, attachment_type)
+    file_name = "{!s}-{!s}-{!s}".format(last, first, attachment.file_name)
+    export_result = export_attachment(attachments[attachment_id], args.target_dir, file_name, folder_path=folder_path)
