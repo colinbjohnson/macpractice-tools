@@ -92,6 +92,10 @@ for attachment_id in attachments:
         # slashes ('/') create a problem when copying attachments. Under OS X you can replace with a :
         # I've opted to remove
         attachment_type = string.replace(attachment.image_attachment_type_name, '/', '')
-    folder_path = "{!s}-{!s}-{!s}/{!s}".format(last, first, attachment.patient_id, attachment_type)
-    file_name = "{!s}-{!s}-{!s}".format(last, first, attachment.file_name)
+    folder_path = '{!s}-{!s}-{!s}/{!s}'.format(last, first, attachment.patient_id, attachment_type)
+    try:
+        file_name = '{!s}-{!s}-{!s}'.format(last, first, attachment.file_name)
+    except UnicodeEncodeError:
+        logging.warn('Failed to encode filename for: {!s}'.format(attachment_id))
+        continue
     export_result = export_attachment(attachments[attachment_id], args.target_dir, file_name, folder_path=folder_path)
