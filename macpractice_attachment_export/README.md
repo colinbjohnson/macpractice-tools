@@ -15,7 +15,7 @@ The MacPractice Attachment Export Tool works by:
 # Use of MacPractice Attachment Export Tool 
 An example use is below:
 
-`./macpractice_attachment_export.py --server 172.16.201.132 --username mp_user --password my_password --target-dir /path/to/mp_attachments /path/to/export_folder`
+`./macpractice_attachment_export.py --server 172.16.201.132 --username mp_user --password my_password --source-dir /path/to/mp_attachments --target-dir /path/to/export_folder`
 
 # Limitations:
 Currently, MacPractice Attachment Export tool has been tested with only:
